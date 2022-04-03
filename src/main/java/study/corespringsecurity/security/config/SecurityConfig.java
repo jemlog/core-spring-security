@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import study.corespringsecurity.security.provider.CustomAuthenticationProvider;
 
@@ -24,10 +25,13 @@ import java.security.cert.Extension;
 public class SecurityConfig extends WebSecurityConfigurerAdapter { // 해당 클래스를 상속해야 시큐리티 설정 메서드들 오버라이딩 가능
 
     @Autowired
+    private AuthenticationFailureHandler customAuthenticationFailureHandler;
+
+    @Autowired
     private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
-//    @Autowired
-  //  private AuthenticationDetailsSource authenticationDetailsSource;
+    @Autowired
+    private AuthenticationDetailsSource authenticationDetailsSource;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -56,7 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter { // 해당 클
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests() // 보안 설정의 시작점
-                .antMatchers("/","/users").permitAll() // root 경로는 모두 허용 -> 보안필터의 검사를 받는다.
+                .antMatchers("/","/users","/user/login/**","/login*").permitAll() // root 경로는 모두 허용 -> 보안필터의 검사를 받는다.
                 .antMatchers("/mypage").hasRole("USER")
                 .antMatchers("/messages").hasRole("MANAGER")
                 .antMatchers("/config").hasRole("ADMIN")
@@ -65,9 +69,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter { // 해당 클
                 .formLogin()
                 .loginPage("/login") // security 기본 페이지에서 해주던걸 내 커스텀 페이지에서 작업 하는 것이다.
                 .loginProcessingUrl("/login_proc")
-    //            .authenticationDetailsSource(authenticationDetailsSource)
+                .authenticationDetailsSource(authenticationDetailsSource)
                 .defaultSuccessUrl("/")
                 .successHandler(customAuthenticationSuccessHandler)
+                .failureHandler(customAuthenticationFailureHandler)
                 .permitAll();
     }
 }
